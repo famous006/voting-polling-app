@@ -16,15 +16,23 @@ const UserSchema = new Schema(
             trim: true,
         },
 
+        // Password is optional for Google users
         password: {
             type: String,
-            required: true,
+            required: false,
             select: false,
+        },
+
+        // Google account ID
+        googleId: {
+            type: String,
+            unique: true,
+            sparse: true,
         },
 
         state: {
             type: String,
-            required: true,
+            default: "",
         },
 
         lga: {
@@ -42,6 +50,26 @@ const UserSchema = new Schema(
             type: String,
             enum: ["active", "suspended"],
             default: "active",
+        },
+
+        isEmailVerified: {
+            type: Boolean,
+            default: true,
+        },
+
+        emailVerificationTokenHash: {
+            type: String,
+            select: false,
+        },
+
+        emailVerificationExpiresAt: {
+            type: Date,
+            select: false,
+        },
+
+        emailVerifiedAt: {
+            type: Date,
+            default: null,
         },
     },
     {

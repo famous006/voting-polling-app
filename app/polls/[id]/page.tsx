@@ -1,5 +1,7 @@
 import PollDetailsClient from "./PollDetailsClient";
 
+export const instant = false;
+
 interface PageProps {
     params: Promise<{
         id: string;

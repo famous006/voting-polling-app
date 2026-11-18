@@ -4,10 +4,13 @@ import { createHash } from "crypto";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 
+// Prevent Next.js from prerendering this API route
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
     try {
         // Get verification token from URL
-        const token = request.nextUrl.searchParams.get("token");
+        const token = new URL(request.url).searchParams.get("token");
 
         if (!token) {
             return NextResponse.json(

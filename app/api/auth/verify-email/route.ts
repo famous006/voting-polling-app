@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { connection } from "next/server";
 import { createHash } from "crypto";
 
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 
 export async function GET(request: NextRequest) {
+    // Prevent prerendering before accessing request data
+    await connection();
+
     try {
-        // Get verification token from URL
-        const token = new URL(request.url).searchParams.get("token");
+        const token = request.nextUrl.searchParams.get("token");
 
         if (!token) {
             return NextResponse.json(
@@ -21,12 +24,10 @@ export async function GET(request: NextRequest) {
 
         await connectDB();
 
-        // Hash the received token
         const tokenHash = createHash("sha256")
             .update(token)
             .digest("hex");
 
-        // Find and verify the account
         const user = await User.findOneAndUpdate(
             {
                 emailVerificationTokenHash: tokenHash,

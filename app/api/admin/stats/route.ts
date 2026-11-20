@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
+import { connection } from "next/server";
 
 import { connectDB } from "@/lib/mongodb";
 import { verifyActiveUser } from "@/lib/auth";
@@ -9,11 +9,13 @@ import Election from "@/models/Election";
 import Poll from "@/models/Polls";
 import Vote from "@/models/Vote";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+    // Wait for an actual request before accessing request data
+    await connection();
+
     try {
-        // 1. Check authentication cookie
-        const cookieStore = await cookies();
-        const token = cookieStore.get("token")?.value;
+        // 1. Get authentication token from request cookies
+        const token = request.cookies.get("token")?.value;
 
         if (!token) {
             return NextResponse.json(

@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { connection } from "next/server";
 
 import { verifyActiveUser } from "@/lib/auth";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
 
 export async function GET() {
+    // Prevent prerendering before accessing request-specific data
+    await connection();
+
     try {
+        const { cookies } = await import("next/headers");
         const cookieStore = await cookies();
         const token = cookieStore.get("token")?.value;
 

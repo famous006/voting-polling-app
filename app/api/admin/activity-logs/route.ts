@@ -1,29 +1,37 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { connection } from "next/server";
 
 import { connectDB } from "@/lib/mongodb";
 import { verifyActiveUser } from "@/lib/auth";
 import ActivityLog from "@/models/ActivityLog";
 
-// Verify admin or superadmin access
-async function verifyAdmin() {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
-
-    if (!token) return false;
-
-    const payload = await verifyActiveUser(token);
-
-    return (
-        payload?.role === "admin" ||
-        payload?.role === "superadmin"
-    );
-}
-
 // GET: Fetch admin activity logs
 export async function GET() {
+    // Prevent prerendering before accessing request-specific data
+    await connection();
+
     try {
-        const isAdmin = await verifyAdmin();
+        // Access cookies at request time
+        const { cookies } = await import("next/headers");
+        const cookieStore = await cookies();
+        const token = cookieStore.get("token")?.value;
+
+        if (!token) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Unauthorized.",
+                },
+                { status: 401 }
+            );
+        }
+
+        // Verify logged-in user
+        const payload = await verifyActiveUser(token);
+
+        const isAdmin =
+            payload?.role === "admin" ||
+            payload?.role === "superadmin";
 
         if (!isAdmin) {
             return NextResponse.json(
@@ -35,8 +43,10 @@ export async function GET() {
             );
         }
 
+        // Connect to MongoDB
         await connectDB();
 
+        // Fetch the latest 100 activity logs
         const logs = await ActivityLog.find()
             .populate("admin", "name email")
             .sort({ createdAt: -1 })

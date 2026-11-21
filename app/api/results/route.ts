@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { connection } from "next/server";
 import mongoose from "mongoose";
 
 import { connectDB } from "@/lib/mongodb";
@@ -28,7 +28,11 @@ interface CandidateResult {
 
 // GET poll results
 export async function GET(request: NextRequest) {
+    // Prevent prerendering before accessing request-specific data
+    await connection();
+
     try {
+        const { cookies } = await import("next/headers");
         const cookieStore = await cookies();
         const token = cookieStore.get("token")?.value;
 

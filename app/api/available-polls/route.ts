@@ -5,12 +5,14 @@ import { connectDB } from "@/lib/mongodb";
 import { verifyToken, verifyActiveUser } from "@/lib/auth";
 
 import Poll from "@/models/Polls";
+import Election from "@/models/Election";
 
 export async function GET() {
-    // Prevent prerendering before accessing request-specific data
+    // Ensure this route executes at request time
     await connection();
 
     try {
+        // Get the user's authentication token
         const { cookies } = await import("next/headers");
         const cookieStore = await cookies();
         const token = cookieStore.get("token")?.value;
@@ -40,7 +42,7 @@ export async function GET() {
             );
         }
 
-        // Check account status for ordinary users
+        // Verify that ordinary users are still active
         if (payload.role === "user") {
             const activeUser = await verifyActiveUser(token);
 
@@ -55,12 +57,19 @@ export async function GET() {
             }
         }
 
+        // Connect to MongoDB
         await connectDB();
 
+        // Fetch polls and populate their associated elections
         const polls = await Poll.find()
             .select("title question status startDate endDate election")
             .sort({ createdAt: -1 })
-            .populate("election", "title category state");
+            .populate({
+                path: "election",
+                model: Election,
+                select: "title category state",
+            })
+            .lean();
 
         return NextResponse.json({
             success: true,
@@ -71,7 +80,10 @@ export async function GET() {
         console.error("Available polls error:", error);
 
         return NextResponse.json(
-            { success: false, message: "Unable to fetch polls." },
+            {
+                success: false,
+                message: "Unable to fetch available polls.",
+            },
             { status: 500 }
         );
     }

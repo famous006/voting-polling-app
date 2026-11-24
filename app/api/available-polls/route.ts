@@ -4,8 +4,7 @@ import { connection } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { verifyToken, verifyActiveUser } from "@/lib/auth";
 
-import Poll from "@/models/Polls";
-import Election from "@/models/Election";
+import { Poll, Election, Candidate } from "@/models";
 
 export async function GET() {
     // Ensure this route executes at request time

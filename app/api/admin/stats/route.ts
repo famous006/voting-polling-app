@@ -6,7 +6,7 @@ import { verifyActiveUser } from "@/lib/auth";
 
 import User from "@/models/User";
 import Election from "@/models/Election";
-import Poll from "@/models/Polls";
+import { Poll } from "@/models";
 import Vote from "@/models/Vote";
 
 export async function GET(request: NextRequest) {
